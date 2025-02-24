@@ -82,4 +82,36 @@ transactionsRouter.put("/transactions/:id", async (req, res) => {
     }
 })
 
+transactionsRouter.get("/transactions/filter", async (req, res) => {
+    const {date_min, date_max} = req.query;
+    try {
+
+        const minDate = new Date(date_min);
+        const maxDate = new Date(date_max);
+
+        const transactions = await prisma.movements.findMany({
+            orderBy:{
+                date: "desc"
+            },
+            where: {
+                AND: [
+                    { date: {gt: minDate} },
+                    { date: {lt: maxDate} }
+                ]
+            }
+        })
+
+        if(transactions.length > 0){
+            res.json(transactions);
+        }
+        else{
+            res.json({message: "non ci sono transazioni nello span di tempo indicato"})
+        }
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({error: "impossibile visualizzare le transazioni"})
+    }
+});
+
 export default transactionsRouter;
